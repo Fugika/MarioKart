@@ -12,6 +12,6 @@ bool UKartItemData_Boost::Activate(APawny* Kart) const
 		return false;
 	}
 	
-	Kart->ApplyBoost(BoostDuration);
+//Kart->ApplyBoost(BoostDuration);
 	return true;
 }
