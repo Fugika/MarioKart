@@ -49,4 +49,20 @@ void AKartItemBox::HandleBeginOverlap(UPrimitiveComponent* OverlappedComponent, 
 	GetWorldTimerManager().SetTimer(RespawnTimer, this, &AKartItemBox::Respawn, RespawnDelay, false);
 	
 	
+	
+}
+
+void AKartItemBox::SetBoxActive(bool bActive)
+{
+	BoxMesh->SetVisibility(bActive, true);
+	
+	DetectionSphere->SetCollisionEnabled(bActive ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
+	
+	SetAnimationEnabled(bActive);
+	
+}
+
+void AKartItemBox::Respawn()
+{
+	SetBoxActive(true);
 }

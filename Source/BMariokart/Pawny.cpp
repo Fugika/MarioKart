@@ -7,14 +7,11 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/Engine.h"
-#include "Engine/LocalPlayer.h"
-#include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
-#include "GameFramework/PlayerController.h"
-#include "InputActionValue.h"
 #include "KartGameMode.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Engine/StaticMesh.h"
+#include "Item/KartItemComponent.h"
+
 
 //Marge (en cm) sous les roues pour considérer que le kart touche le sol
 static constexpr float GroundSnapTolerance = 5.f;
@@ -54,6 +51,8 @@ APawny::APawny()
 	WheelRearRight = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WheelRearRight"));
 	WheelRearRight -> SetupAttachment(BodyMesh);
 	WheelRearRight->SetCollisionEnabled (ECollisionEnabled::NoCollision);
+	
+	ItemComponent = CreateDefaultSubobject<UKartItemComponent>(TEXT("ItemComponent"));
 	
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(CollisionSphere);
@@ -146,44 +145,6 @@ void APawny::ResetRaceProgress()
 	FinishTime = 0.f;
 }
 
-void APawny::NotifyControllerChanged()
-{
-	Super::NotifyControllerChanged();
-	
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
-	{
-		if  (UEnhancedInputLocalPlayerSubsystem*Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(KartMappingContext, 0);
-		}
-			
-	}
-}
-
-void APawny::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	
-	UEnhancedInputComponent* EnhancedInput = Cast <UEnhancedInputComponent> (PlayerInputComponent);
-	if (EnhancedInput == nullptr)
-	{
-		return;
-	}
-	
-	EnhancedInput->BindAction(ThrottleAction,ETriggerEvent::Triggered,this,&APawny::OnThrottle);
-	EnhancedInput->BindAction(ThrottleAction, ETriggerEvent::Completed, this, &APawny::OnThrottleReleased);
-	
-	EnhancedInput->BindAction(SteerAction, ETriggerEvent::Triggered, this, &APawny::OnSteer);
-	EnhancedInput->BindAction(SteerAction, ETriggerEvent::Completed, this, &APawny::OnSteerReleased);
-	
-	EnhancedInput->BindAction(DriftAction, ETriggerEvent::Started, this, &APawny::OnDriftPressed);
-	EnhancedInput->BindAction(DriftAction, ETriggerEvent::Completed,this, &APawny::OnDriftReleased);
-	
-	EnhancedInput->BindAction(JumpAction,ETriggerEvent::Started, this, &APawny::OnJumpPressed);
-	
-	
-}
-
 // Called every frame
 void APawny::Tick(float DeltaTime)
 {
@@ -213,50 +174,21 @@ void APawny::Tick(float DeltaTime)
 
 }
 
-void APawny::OnThrottle(const FInputActionValue& Value)
+void APawny::SetThrottleInput(float Value)
 {
-	ThrottleInput = Value.Get<float>();
-	
+	ThrottleInput = FMath::Clamp(Value, -1.f, 1.f);
 }
 
-void APawny::OnThrottleReleased(const FInputActionValue& Value)
+void APawny::SetSteerInput(float Value)
 {
-	ThrottleInput = 0.f;
-	
+	SteerInput = FMath::Clamp(Value, -1.f, 1.f) ;
 }
 
-void APawny::OnSteer(const FInputActionValue& Value)
-{
-	SteerInput = Value.Get<float>();
-	
-	
-}
-
-void APawny::OnSteerReleased(const FInputActionValue& Value)
-{
-	SteerInput = 0.f;
-}
-
-void APawny::OnDriftPressed(const FInputActionValue& Value)
+void APawny::UseItem()
 {
 	if (bCanMove)
 	{
-		StartDrift();
-	}
-}
-
-void APawny::OnDriftReleased(const FInputActionValue& Value)
-{
-	EndDrift();
-	
-}
-
-void APawny::OnJumpPressed(const FInputActionValue& Value)
-{
-	if (bCanMove)
-	{
-		Jump();
-		
+		ItemComponent->UseItem();
 	}
 }
 
@@ -556,6 +488,11 @@ void APawny::Jump()
 		
 	}
 	
+	if (!bCanMove)
+	{
+		return;
+	}
+	
 	VerticalSpeed = JumpVelocity;
 	bIsGrounded = false;
 }
@@ -565,8 +502,13 @@ void APawny::StartDrift()
 	if (!bIsGrounded || CurrentSpeed < DriftMinSpeed || FMath::IsNearlyZero(SteerInput))
 	{
 		return;
-		
 	}
+	
+	if (!bCanMove)
+	{
+		return;
+	}
+	
 	bIsDrifting = true;
 	DriftDirection = SteerInput > 0.f ? 1 : -1;
 	DriftChargeTime = 0.f;
