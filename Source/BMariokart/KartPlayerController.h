@@ -6,11 +6,11 @@
 #include "GameFramework/PlayerController.h"
 #include "KartPlayerController.generated.h"
 
-class UKartCountdownWidget;
-class UKartRaceHudWidget;
+class UKartCountDown;
+class UKartRaceHUDWidget;
 class UInputMappingContext;
 class UInputAction;
-class AKartPawn;
+class APawny;
 struct FInputActionValue;
 
 /**
@@ -30,11 +30,11 @@ protected:
 	
     // Widget du compte à rebours à afficher (mettre WBP_Countdown ici dans BP_KartPlayerController)
     UPROPERTY(EditAnywhere, Category = "Kart|UI")
-    TSubclassOf<UKartCountdownWidget> CountdownWidgetClass;
+    TSubclassOf<UKartCountDown> CountDownClass;
 	
     // Widget du chrono et des tours (mettre WBP_RaceHud ici dans BP_KartPlayerController)
     UPROPERTY(EditAnywhere, Category = "Kart|UI")
-    TSubclassOf<UKartRaceHudWidget> RaceHudWidgetClass;
+    TSubclassOf<UKartRaceHUDWidget> RaceHUDWidgetClass;
 	
     // ---------- Input (avant, ces réglages étaient dans le kart) ----------
     UPROPERTY(EditAnywhere, Category = "Kart|Input")
@@ -73,12 +73,12 @@ private:
     void OnUseItemPressed(const FInputActionValue& Value);
     
 	// Le kart que ce controller pilote (nullptr s'il ne pilote rien, ou autre chose qu'un kart)
-    AKartPawn* GetKart() const;
+    APawny* GetKart() const;
     
 	UPROPERTY()
-    TObjectPtr<UKartCountdownWidget> CountdownWidget;
+    TObjectPtr<UKartCountDown> CountDown;
 	
     UPROPERTY()
-    TObjectPtr<UKartRaceHudWidget> RaceHudWidget;
+    TObjectPtr<UKartRaceHUDWidget> RaceHUDWidget;
 	
 };

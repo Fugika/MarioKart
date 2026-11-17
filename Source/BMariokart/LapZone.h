@@ -36,7 +36,7 @@ protected:
 UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Components")
 	TObjectPtr<UArrowComponent> Arrow;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Lap", meta = (Clamp = "0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Kart|Lap", meta = (Clamp = "0"))
 	int32 ZoneIndex = 0;
 	
 	UPROPERTY(EditAnywhere, Category = "Kart|Lap")

@@ -32,7 +32,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Components")
 	TObjectPtr<UStaticMeshComponent> BoxMesh;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|ItemBox")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Kart|ItemBox")
 	TObjectPtr<UKartItemPoolData> ItemPool;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Kart|ItemBox", meta = (ClampMin = "0.1"))

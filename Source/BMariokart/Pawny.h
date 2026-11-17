@@ -70,8 +70,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Kart|Race")
 	float GetFinishedTime() const { return FinishTime; }
 	
-	//UFUNCTION(BlueprintCallable, Category = "Kart|Items")
-	//void ApplyBoost(float Duration);
+	UFUNCTION(BlueprintCallable, Category = "Kart|Items")
+	void ApplyBoost(float Duration);
 
 protected:
 	
