@@ -19,5 +19,5 @@ public:
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category = "Item|Boost", meta = (ClampMin = "0.1"))
 	float BoostDuration = 1.5f;
 	
-	virtual bool Activate(APawny* Pawn) const override;
+	virtual bool Activate(APawny* Kart) const override;
 };

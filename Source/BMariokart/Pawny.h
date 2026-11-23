@@ -27,7 +27,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	
 	UFUNCTION(BlueprintCallable, Category = "Kart")
-		void SetCanMove(bool bInCanMove);
+	void SetCanMove(bool bInCanMove);
 		
 	UFUNCTION(BlueprintPure, Category = "Kart")
 	bool CanMove() const { return bCanMove; }
@@ -72,13 +72,19 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Kart|Items")
 	void ApplyBoost(float Duration);
-
+	
+	UFUNCTION(BlueprintCallable, Category="Kart|Items")
+	void SpinOut(float Duration);
+	
+	UFUNCTION(BlueprintPure, Category="Kart|Items")
+	bool IsSpinningOut() const { return SpinOutTimeRemaining > 0.f; }
+	
+	UFUNCTION(BlueprintPure, Category="Kart|Items")
+	UKartItemComponent* GetItemComponent() const { return ItemComponent; }
+	
 protected:
 	
-
 	
-	UFUNCTION(BlueprintCallable, Category = "Kart|Items")
-	UKartItemComponent* GetItemComponent() const { return ItemComponent; }
 	
 	virtual void BeginPlay() override;
 	
@@ -228,6 +234,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Kart|Camera")
 	float FieldOfViewInterSpeed = 4.f;
 	
+	UPROPERTY(EditAnywhere, Category = "Kart|SpinOut", meta = (ClampMin = "0"))
+	int32 SpinOutTurns = 2;
+	
+	UPROPERTY(EditAnywhere, Category = "Kart|SpinOut", meta = (ClampMin = "0", ClampMax = "1"))
+	float SpinOutSpeedFactor = 0.6f;
+	
 	UPROPERTY(EditAnywhere, Category = "Kart|Visual")
 	bool bShowDebug = true;
 	
@@ -272,6 +284,15 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Kart|State")
 	bool bCanMove = true;
 	
+	UPROPERTY(VisibleAnywhere, Category = "Kart|State")
+	float SpinOutTimeRemaining = 0.f;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Kart|State")
+	float SpinOutTotalTime = 0.f;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Kart|State")
+	float SpinOutYaw = 0.f;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Kart|Race")
 	int32 CurrentLap = 1;
 	
@@ -304,12 +325,16 @@ private:
 	
 	void SetWheelRotation(UStaticMeshComponent* Wheel, const FRotator& BaseRotation, float SteerAngle) const;
 	
+	void UpdateSpinOut(float DeltaTime);
+	
 	FRotator BodyBaseRotation;
 	FRotator SpringArmBaseRotation;
 	FRotator WheelFrontLeftBaseRotation;
 	FRotator WheelFrontRightBaseRotation;
 	FRotator WheelRearLeftBaseRotation;
 	FRotator WheelRearRightBaseRotation;
+	
+	float BodySlideYaw = 0.f;
 	
 	float CameraSlideYaw = 0.f;
 	float CameraSlopePitch = 0.f;

@@ -157,6 +157,8 @@ void APawny::Tick(float DeltaTime)
 		
 	}
 	
+	UpdateSpinOut(DeltaTime);
+	
 	UpdateGround(DeltaTime);
 	UpdateBoost(DeltaTime);
 	UpdateSpeed(DeltaTime);
@@ -186,7 +188,7 @@ void APawny::SetSteerInput(float Value)
 
 void APawny::UseItem()
 {
-	if (bCanMove)
+	if (bCanMove && !IsSpinningOut())
 	{
 		ItemComponent->UseItem();
 	}
@@ -194,9 +196,9 @@ void APawny::UseItem()
 
 void APawny::UpdateCameraFieldOfView(float DeltaTime)
 {
-	float TargetFieldOfVew = BoostFieldOfView;
+	float TargetFieldOfVew = BaseFieldOfView;
 	
-	if (TargetFieldOfVew > 0.f)
+	if (BoostTimeRemaining > 0.f)
 	{
 		TargetFieldOfVew = BoostFieldOfView;
 	}
@@ -216,7 +218,7 @@ int32 APawny::TraceGroundUnderWheels(FVector& OutGroundPoint, FVector& OutGround
 	const FVector Forward = GetActorForwardVector() * GroundProbeHalfLength;
 	const FVector Right = GetActorRightVector() * GroundProbeHalfWidth;
 	
-	const FVector WheelOffset[4] = { Forward - Right, Forward + Right, -Forward - Right, Forward + Right};
+	const FVector WheelOffset[4] = { Forward - Right, Forward + Right, -Forward - Right, -Forward + Right};
 	
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
@@ -464,10 +466,12 @@ void APawny::UpdateVisuals(float DeltaTime)
 	const float TargetSlideYaw = bIsDrifting ? DriftDirection * DriftSlideAngle * FMath::SmoothStep(0.f,1.f, DriftBlend) : 0.f;
 	const float CurrentSlideYaw = BodyMesh->GetRelativeRotation().Yaw - BodyBaseRotation.Yaw;
 	const float NewSlideYaw = FMath::FInterpTo(CurrentSlideYaw,TargetSlideYaw,DeltaTime, DriftSlideInterSpeed);
+	
+	BodySlideYaw = FMath::FInterpTo(BodySlideYaw, TargetSlideYaw,DeltaTime, DriftSlideInterSpeed);
 
 	
 	FRotator BodyRotation = BodyBaseRotation;
-	BodyRotation.Yaw += NewSlideYaw;
+	BodyRotation.Yaw += BodySlideYaw + SpinOutYaw;
 	BodyMesh->SetRelativeRotation(BodyRotation);
 	
 	CameraSlideYaw = FMath::FInterpTo(CameraSlideYaw, NewSlideYaw * CameraDriftFollow, DeltaTime, CameraDriftInterSpeed);
@@ -477,8 +481,10 @@ void APawny::UpdateVisuals(float DeltaTime)
 	CameraSlopePitch = FMath::FInterpTo(CameraSlopePitch,TargetSlopePitch,DeltaTime, CameraSlopeFollowSpeed);
 	
 	FRotator ArmRotation = SpringArmBaseRotation;
+	ArmRotation.Yaw += CameraSlideYaw;
+	ArmRotation.Pitch += CameraSlopePitch;
+	SpringArm->SetRelativeRotation(ArmRotation);
 }
-
 
 void APawny::Jump()
 {
@@ -488,7 +494,7 @@ void APawny::Jump()
 		
 	}
 	
-	if (!bCanMove)
+	if (!bCanMove||IsSpinningOut())
 	{
 		return;
 	}
@@ -504,7 +510,7 @@ void APawny::StartDrift()
 		return;
 	}
 	
-	if (!bCanMove)
+	if (!bCanMove||IsSpinningOut())
 	{
 		return;
 	}
@@ -570,11 +576,6 @@ void APawny::ShowDebugInfo() const
 	{
 		DriftColor = FColor::Blue;
 	}
-	if (DriftChargeTime >= MiniTurboChargeTime)
-	{
-		DriftColor = FColor::Magenta;
-		
-	}
 	else if (DriftChargeTime >= MiniTurboChargeTime)
 	{
 		DriftColor = FColor::Red;
@@ -587,3 +588,48 @@ void APawny::ShowDebugInfo() const
 	GEngine->AddOnScreenDebugMessage(3,0.f,FColor::Yellow,FString::Printf(TEXT("Boost: %.2f"), BoostTimeRemaining));
 	
 }
+
+void APawny::ApplyBoost(float Duration)
+{
+	if (Duration > 0.f)
+	{
+		StartBoost(Duration);
+	}
+}
+
+void APawny::SpinOut(float Duration)
+{
+	if (Duration <= 0.f|| IsSpinningOut())
+	{
+		return;
+	}
+	SpinOutTotalTime = Duration;
+	SpinOutTimeRemaining = Duration;
+	
+	CurrentSpeed *= SpinOutSpeedFactor;
+	BoostTimeRemaining = 0.f;
+	bIsDrifting = false;
+	DriftDirection = 0;
+	DriftChargeTime = 0.f;
+}
+
+void APawny::UpdateSpinOut(float DeltaTime)
+{
+	if (!IsSpinningOut())
+	{
+		SpinOutYaw = 0.f;
+		return;
+	}
+	
+	SpinOutTimeRemaining = FMath::Max(0.f, SpinOutTimeRemaining - DeltaTime);
+	
+	ThrottleInput = 0.f;
+	SteerInput = 0.f;
+	
+	const float Progress = 1.f - SpinOutTimeRemaining / SpinOutTotalTime;
+	
+	const float EaseOut = 1.f - FMath::Square(1.f-Progress);
+	SpinOutYaw = 360.f * SpinOutTurns* EaseOut;
+}
+
+
