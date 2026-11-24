@@ -219,13 +219,13 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Kart|Camera")
 	float BoostFieldOfView = 110.f;
 	
-	UPROPERTY(EditAnywhere, Category = "Kart|Camera",meta = (ClampMin = "0", ClampMax = "90"))
+	UPROPERTY(EditAnywhere, Category = "Kart|Camera",meta = (ClampMin = "0", ClampMax = "1"))
 	float CameraDriftFollow = 1.f;
 	
 	UPROPERTY(EditAnywhere, Category = "Kart|Camera")
 	float CameraDriftInterSpeed = 3.f;
 	
-	UPROPERTY(EditAnywhere, Category = "Kart|Camera")
+	UPROPERTY(EditAnywhere, Category = "Kart|Camera", meta = (ClampMin = "0", ClampMax = "90"))
 	float CameraSlopeDeadZone = 10.f;
 	
 	UPROPERTY(EditAnywhere, Category = "Kart|Camera")
@@ -240,8 +240,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Kart|SpinOut", meta = (ClampMin = "0", ClampMax = "1"))
 	float SpinOutSpeedFactor = 0.6f;
 	
-	UPROPERTY(EditAnywhere, Category = "Kart|Visual")
-	bool bShowDebug = true;
+	
+	bool bShowDebug = false;
 	
 	//Etat (Visible)
 	
@@ -281,7 +281,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Kart|State")
 	FVector GroundNormal = FVector::UpVector;
 	
-	UPROPERTY(VisibleAnywhere, Category = "Kart|State")
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category = "Kart|State")
 	bool bCanMove = true;
 	
 	UPROPERTY(VisibleAnywhere, Category = "Kart|State")

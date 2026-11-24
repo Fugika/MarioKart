@@ -32,7 +32,7 @@ APawny::APawny()
 	CollisionSphere->SetCollisionProfileName(TEXT("Pawn"));
 	RootComponent = CollisionSphere;
 	
-	BodyMesh = CreateDefaultSubobject<UStaticMeshComponent>("BodyMesh");
+	BodyMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BodyMesh"));
 	BodyMesh->SetupAttachment(CollisionSphere);
 	BodyMesh->SetCollisionEnabled (ECollisionEnabled::NoCollision);
 	
@@ -84,6 +84,12 @@ void APawny::BeginPlay()
 	WheelFrontRightBaseRotation = WheelFrontRight->GetRelativeRotation();
 	WheelRearLeftBaseRotation = WheelRearLeft->GetRelativeRotation();
 	WheelRearRightBaseRotation = WheelRearRight->GetRelativeRotation();
+	
+	if (const AKartGameMode* GameMode = GetWorld()->GetAuthGameMode<AKartGameMode>())
+	{
+		bCanMove = GameMode->IsRaceStarted();
+		bShowDebug = GameMode->IsDebugTextEnabled();
+	}
 	
 }
 
@@ -326,7 +332,7 @@ void APawny::UpdateSpeed(float DeltaTime)
 	if (ThrottleInput > 0.f)
 	{
 		TargetSpeed = GetCurrentmaxSpeed() * ThrottleInput;
-		Rate = CurrentSpeed < 0.f ? BoostSpeed : Acceleration;
+		Rate = CurrentSpeed < 0.f ? BrakeDeceleration : Acceleration;
 	}
 	
 	else if (ThrottleInput < 0.f)
